@@ -22,7 +22,7 @@ while running:
     #illustration
     canvas = np.zeros((600,800,3))
     
-    pad_graph = pad.get_graph()
+    pad_graph = pad.graph
     canvas[pad.pos_y : pad.pos_y + pad.size, pad.pos_x : pad.pos_x + pad.size] = pad_graph
     surface = pygame.surfarray.make_surface(canvas.swapaxes(0,1))
     screen.blit(surface, (0,0))
