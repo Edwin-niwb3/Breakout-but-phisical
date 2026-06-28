@@ -7,7 +7,7 @@ running = True
 screen = pygame.display.set_mode((800,600))
 clock = pygame.time.Clock()
 canvas = np.zeros((600,800))
-pad = objects.Pad([0,0])
+pad = objects.Pad([0,0], thickness = 5)
 
 #main loop
 while running:
@@ -19,11 +19,13 @@ while running:
 
     mouse_pos = pygame.mouse.get_pos()
     pad.set_pos(mouse_pos)
+    pad.rotate(0.01*np.pi)
+
+
     #illustration
     canvas = np.zeros((600,800,3))
-    
-    pad_graph = pad.graph
-    canvas[pad.pos_y : pad.pos_y + pad.size, pad.pos_x : pad.pos_x + pad.size] = pad_graph
+
+    canvas[pad.pos_y : pad.pos_y + pad.size, pad.pos_x : pad.pos_x + pad.size] = pad.get_graph()
     surface = pygame.surfarray.make_surface(canvas.swapaxes(0,1))
     screen.blit(surface, (0,0))
     pygame.display.flip()
