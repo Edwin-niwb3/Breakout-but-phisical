@@ -1,20 +1,26 @@
 import pygame
 import numpy as np
-
-class Pad:
-    def __init__(self, pos, size = 100, facing_angle = np.pi/2, form = "linear", thickness = 5):
+class Object:
+    def __init__(self, pos, size, facing_angle):
         self.pos = np.array(pos)
+        self.size = size
+        #the size of actuall picture should be always smaller than self.size.
+        #since self.size is the size of get_graph(). And if self.size = 100,
+        #the index 100 will be out of range in get_graph()
         self.pos_x = np.array(pos)[0]
         self.pos_y = np.array(pos)[1]
-        self.size = size
+        self.phy_pos = self.pos      ###
         self.facing_angle = facing_angle
+
+class Pad(Object):
+    def __init__(self, pos, size = 100, facing_angle = np.pi/2, form = "linear", thickness = 5):
+        super().__init__(pos, size, facing_angle)
+
         self.thickness = thickness
 
         #shape of the pad and the point set of it
         self.form = form
-        #the size of actuall picture should be always smaller than self.size.
-        #since self.size is the size of get_graph(). And if self.size = 100,
-        #the index 100 will be out of range in get_graph
+        
         #here, since point_x is defined by np.linspace(), we limit the upper and lower bound
         if form == "linear":
             points_x = np.array([ np.linspace(-(self.size/2 -thickness ), (self.size/2 -thickness), 100)] )
@@ -24,7 +30,7 @@ class Pad:
             #They are 2D array, so that we can do transpose.
             for i in range(0,thickness):
                 points_y[0, i*100: (i+1)*100] = - thickness/2 + i
-                print(points_y)
+                print(points_y)#For debug
         #here, x and y is swaped, because the coordinate systems in Numpy and Pygame are different
         self.points = np.hstack((np.transpose(points_y),np.transpose(points_x)))
 
