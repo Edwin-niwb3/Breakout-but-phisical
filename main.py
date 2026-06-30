@@ -1,13 +1,15 @@
 import pygame
 import numpy as np
 import objects
+import movements
 
 pygame.init()
 running = True
 screen = pygame.display.set_mode((800,600))
 clock = pygame.time.Clock()
-canvas = np.zeros((600,800))
-pad = objects.Pad([0,0], thickness = 5)
+canvas = np.zeros((600,800,3))
+pad = objects.Pad([400,500], thickness = 5)
+list_of_objects = [pad]
 
 #main loop
 while running:
@@ -17,15 +19,15 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-    mouse_pos = pygame.mouse.get_pos()
-    pad.set_pos(mouse_pos)
-    pad.rotate(0.01*np.pi)
-
+    #detecting collision
+    movements.detect_collision()
+    #actuall movement of everything
+    movements.move(list_of_objects)
 
     #illustration
     canvas = np.zeros((600,800,3))
-
-    canvas[pad.pos_y : pad.pos_y + pad.size, pad.pos_x : pad.pos_x + pad.size] = pad.get_graph()
+    #swaped axes
+    canvas[pad.pos[1] : pad.pos[1] + pad.size, pad.pos[0] : pad.pos[0] + pad.size] = pad.get_graph()
     surface = pygame.surfarray.make_surface(canvas.swapaxes(0,1))
     screen.blit(surface, (0,0))
     pygame.display.flip()

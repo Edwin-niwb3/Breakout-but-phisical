@@ -7,10 +7,11 @@ class Object:
         #the size of actuall picture should be always smaller than self.size.
         #since self.size is the size of get_graph(). And if self.size = 100,
         #the index 100 will be out of range in get_graph()
-        self.pos_x = np.array(pos)[0]
-        self.pos_y = np.array(pos)[1]
-        self.phy_pos = self.pos      ###
+        self.velocity = np.array([0,0])
+        self.phy_pos = self.pos ###
         self.facing_angle = facing_angle
+        #swaped axes
+        self.rect_hit_box = pygame.Rect(self.pos[1],self.pos[0],self.size,self.size)
 
 class Pad(Object):
     def __init__(self, pos, size = 100, facing_angle = np.pi/2, form = "linear", thickness = 5):
@@ -30,19 +31,9 @@ class Pad(Object):
             #They are 2D array, so that we can do transpose.
             for i in range(0,thickness):
                 points_y[0, i*100: (i+1)*100] = - thickness/2 + i
-                print(points_y)#For debug
-        #here, x and y is swaped, because the coordinate systems in Numpy and Pygame are different
-        self.points = np.hstack((np.transpose(points_y),np.transpose(points_x)))
 
+        self.points = np.hstack((np.transpose(points_x),np.transpose(points_y)))
         self.points_int = self.points.astype(int)
-
-    def set_pos(self, pos: np.array):
-        self.pos = pos
-        self.pos_x = np.array(pos)[0]
-        self.pos_y = np.array(pos)[1]
-
-    def set_size(self, size: float = 100):
-        self.size = size
 
     def rotate(self, angle):
         self.facing_angle += angle
@@ -56,4 +47,6 @@ class Pad(Object):
         graph = np.zeros((self.size, self.size, 3))
         points_for_graph = self.points_int + 50 #make them all positive
         graph[points_for_graph[:,0], points_for_graph[:,1]] = [255,255,255]
+        #swaped axes
+        graph = graph.swapaxes(0,1)
         return graph
