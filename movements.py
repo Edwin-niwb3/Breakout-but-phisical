@@ -27,13 +27,23 @@ def ball_collision(ball, object):
                     v_ball[1] = -v_ball[1]
 
                     #friction
-                    
-                    #error, should be fixed
+                    J_crit = -2/7 * (v_ball[0] - ball.angular_velocity * ball.size/2)
+                    J_n = 2*v_ball[1]
+                    J_tan = J_crit/abs(J_crit) * min(abs(J_crit), abs(J_n * object.friction_coefficient))
+                    v_ball[0] += J_tan
+                    ball.angular_velocity += -J_tan / ((2/5)*(ball.size/2))
 
                 #left & right surface
                 if abs(p[1] - v_ball_copy[1]) <= object.thickness/2:
                     #normal (orthogonal) collision
                     v_ball[0] = -v_ball[0]
+
+                    #friction
+                    J_crit = -2/7 * (v_ball[1] - ball.angular_velocity * ball.size/2)
+                    J_n = 2*v_ball[0]
+                    J_tan = J_crit/abs(J_crit) * min(abs(J_crit), abs(J_n * object.friction_coefficient))
+                    v_ball[1] += J_tan
+                    ball.angular_velocity += -J_tan / ((2/5)*(ball.size/2))
 
                 #corner collision, later
                 else:

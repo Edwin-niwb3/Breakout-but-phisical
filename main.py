@@ -9,9 +9,9 @@ running = True
 screen = pygame.display.set_mode((800,600))
 clock = pygame.time.Clock()
 canvas = np.zeros((600,800,3))
-pad = objects.Pad([400,500], lenth = 80, thickness = 10, friction_coefficient = 0.5)
-ball = objects.Ball([400,100], size = 10, velocity = np.array([0.0,2.0]),
-                    magnus_effect_intensity = 0.005)
+pad = objects.Pad([400,500], lenth = 80, thickness = 10, friction_coefficient = 0.2)
+ball = objects.Ball([400,100], size = 10, velocity = np.array([0.0,4.0]),
+                    magnus_effect_intensity = 0.01)
 list_of_objects = [pad,ball]
 
 
@@ -53,6 +53,8 @@ while running:
     pygame.draw.line(screen, 'red', 
                      ball.pos + np.array([ball.size/2,ball.size/2]),
                      ball.pos + np.array([ball.size/2,ball.size/2]) + ball.velocity * 10)
+    pygame.draw.circle(screen, 'blue' if ball.angular_velocity > 0 else 'red', (ball.pos + np.array([ball.size/2, ball.size/2])).astype(int),
+                        int(abs(ball.angular_velocity)*50),1)
     
     pygame.display.flip()
     #FPS
