@@ -12,6 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
+      - run: brew install sdl2 sdl2_image sdl2_mixer sdl2_ttf
       - run: |
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       - run: pip install pyinstaller
