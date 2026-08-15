@@ -14,28 +14,31 @@ def ball_collision(ball, object):
                                                 [-np.sin(angle),np.cos(angle)]])
             p = p @ np.transpose(reference_rotate_matrix)
             #collision
-            if np.abs(p[0]) <= (object.size - object.thickness + ball.size)/2 and np.abs(p[1]) <= (object.thickness + ball.size)/2:
+            if np.abs(p[0]) <= (object.lenth + ball.size)/2 and np.abs(p[1]) <= (object.thickness + ball.size)/2:
                 v_pad = object.velocity @ np.transpose(reference_rotate_matrix)
-                v_ball = ball.velocity @ np.transpose(reference_rotate_matrix) - v_pad
-                v_rotate = 0
+                v_rotate_tan = p * object.angular_velocity @ np.array([[np.cos(np.pi/2),-np.sin(np.pi/2)],
+                                                                        [np.sin(np.pi/2),np.cos(np.pi/2)]])
+                v_ball = ball.velocity @ np.transpose(reference_rotate_matrix) - v_pad + v_rotate_tan
+                v_ball_copy = np.copy(v_ball)
+
                 #upper & lower surface
-                if abs(p[0]) <= object.size - object.thickness:  
+                if abs(p[0] - v_ball_copy[0]) <= (object.lenth)/2:  
                     #normal (orthogonal) collision
-                    v_rotate = np.abs(p[0]) * object.angular_velocity
-                    v_ball[1] = -v_ball[1] + v_pad[1] + 2* v_rotate * (p[0]/abs(p[0]))
+                    v_ball[1] = -v_ball[1]
 
                     #friction
-                    last_angular_velocity = ball.angular_velocity
-                    ball.angular_velocity += (v_ball[0] / (ball.size/2) - last_angular_velocity) * object.friction_coefficient
-                    v_ball[0] += (last_angular_velocity - ball.angular_velocity) * (ball.size/2)
+                    
+                    #error, should be fixed
 
                 #left & right surface
-                elif abs(p[1]) <= object.thickness:
+                if abs(p[1] - v_ball_copy[1]) <= object.thickness/2:
+                    #normal (orthogonal) collision
                     v_ball[0] = -v_ball[0]
-                    #error, fix later
+
                 #corner collision, later
                 else:
                     pass
+
                 ball.velocity = (v_ball + v_pad) @ reference_rotate_matrix
             
 
@@ -70,26 +73,28 @@ def move_pad(pad):
 
 def move_ball(ball):
     #hitting the wall (depending on width of screen or specific design)
-    if ((ball.pos[0] - ball.size/2 < 10 and ball.velocity[0] < 0) 
-        or (ball.pos[0] + ball.size/2 > 790 and ball.velocity[0] > 0 )):
+    if ((ball.pos[0] < abs(ball.velocity[0]) and ball.velocity[0] < 0) 
+        or (ball.pos[0] + ball.size > 800 - abs(ball.velocity[0]) and ball.velocity[0] > 0 )):
+
         ball.velocity[0] = -1* ball.velocity[0]
-    elif ((ball.pos[1] - ball.size/2 < 10 and ball.velocity[1] < 0) 
-        or (ball.pos[1] + ball.size/2 > 590 and ball.velocity[1] > 0 )):
+    elif ((ball.pos[1] < abs(ball.velocity[1]) and ball.velocity[1] < 0) 
+        or (ball.pos[1] + ball.size > 600 - abs(ball.velocity[1]) and ball.velocity[1] > 0 )):
         ball.velocity[1] = -1* ball.velocity[1]
 
     #magnus effect
-    delta_v = np.array([0,0])
-    v_ball_3d = np.array([ball.velocity[0],ball.velocity[1],0])
-    v_angular_3d = np.array([0,0,ball.angular_velocity])
-    f_magnus = ((ball.size/2)**3) * ball.magnus_effect_intensity * (np.cross(v_angular_3d,v_ball_3d))
-    ball.velocity += np.array([f_magnus[0],f_magnus[1]])
-    #Velocity constantly increasing!!! Fix later with Verlet Integral
+    angle = ball.magnus_effect_intensity * ball.angular_velocity
+    R = np.array([[np.cos(angle), np.sin(angle)],
+                  [-np.sin(angle), np.cos(angle)]])
+    ball.velocity = ball.velocity @ R
 
     pressed_key = pygame.key.get_pressed()
     #for test
     if pressed_key[pygame.K_c]:
-        ball.velocity = np.array([0.0,10.0])
+        ball.velocity = np.array([0.0,30.0])
 
+    if (ball.velocity[0]**2 + ball.velocity[1]**2)**(1/2) >= 15:
+        ball.velocity = ball.velocity / 2
+        print('too fast')
 
     ball.pos += ball.velocity
 
