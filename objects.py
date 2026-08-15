@@ -2,20 +2,18 @@ import pygame
 import numpy as np
 
 def pad_render(pad):
-    if pad.form == "linear":
+    points_x = np.array([np.linspace(0, (pad.lenth), 100)] )
+    points_x = np.tile(points_x, pad.thickness)
+    points_y = np.array([np.zeros(100 * pad.thickness)])
+    #Attention!!! Shape of point_x and points_y are (1,100* thickness).
+    #They are 2D array, so that we can do transpose.
+    for i in range(0,pad.thickness):
+        points_y[0, i*100: (i+1)*100] = i
 
-            points_x = np.array([np.linspace(0, (pad.lenth), 100)] )
-            points_x = np.tile(points_x, pad.thickness)
-            points_y = np.array([np.zeros(100 * pad.thickness)])
-            #Attention!!! Shape of point_x and points_y are (1,100* thickness).
-            #They are 2D array, so that we can do transpose.
-            for i in range(0,pad.thickness):
-                points_y[0, i*100: (i+1)*100] = i
-
-            pad.points = np.hstack((np.transpose(points_x),np.transpose(points_y)))
-            pad.points[:, 0] += (pad.size - pad.lenth)/2
-            pad.points[:, 1] += (pad.size - pad.thickness)/2
-            pad.points_int = pad.points.astype(int)
+    pad.points = np.hstack((np.transpose(points_x),np.transpose(points_y)))
+    pad.points[:, 0] += (pad.size - pad.lenth)/2
+    pad.points[:, 1] += (pad.size - pad.thickness)/2
+    pad.points_int = pad.points.astype(int)
 
 class Object:
     def __init__(self, pos, size, facing_angle, velocity = np.array([0,0])):
@@ -49,7 +47,8 @@ class Pad(Object):
         self.lenth = lenth
 
         #shape of the pad and the point set of it
-        self.form = form
+        # self.form = form
+        #yet useless
 
         #render
         pad_render(self)
@@ -72,7 +71,7 @@ class Pad(Object):
         self.points = np.matmul(self.points, rotation_matrix)
         self.points += np.array([self.size/2,self.size/2])
 
-    #for test
+    # #for test
     # def change_size(self, thickness):
     #     self.thickness = thickness
     #     #render again
@@ -101,3 +100,17 @@ class Ball(Object):
         self.magnus_effect_intensity = magnus_effect_intensity
     def get_graph(self):
         return super().get_graph()
+
+class Brick(Object):
+    def __init__(self, pos, size = 100, facing_angle = np.pi/2, lenth = 30, thickness = 20,
+                 angular_velocity = 0, friction_coefficient = 0.8, collided = 0):
+        super().__init__(pos, size, facing_angle)
+        self.lenth = lenth
+        self.thickness = thickness
+        self.angular_velocity = angular_velocity
+        self.friction_coefficient = friction_coefficient
+        self.collided = 0
+        #render
+        pad_render(self)
+        #Here we yet borrow pad_render(), later we might rename it to rectangle_render()
+        pass

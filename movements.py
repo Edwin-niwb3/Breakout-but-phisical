@@ -7,49 +7,66 @@ def ball_collision(ball, object):
     object_pos = object.pos + object.size/2
     #position of ball as a point in coordinate system of object
     p = ball_pos - object_pos
-    if type(object) == objects.Pad:
-        if object.form == 'linear':
-            angle = object.facing_angle - np.pi/2
-            reference_rotate_matrix = np.array([[np.cos(angle),np.sin(angle)],
-                                                [-np.sin(angle),np.cos(angle)]])
-            p = p @ np.transpose(reference_rotate_matrix)
-            #collision
-            if np.abs(p[0]) <= (object.lenth + ball.size)/2 and np.abs(p[1]) <= (object.thickness + ball.size)/2:
-                v_pad = object.velocity @ np.transpose(reference_rotate_matrix)
-                v_rotate_tan = p * object.angular_velocity @ np.array([[np.cos(np.pi/2),-np.sin(np.pi/2)],
-                                                                        [np.sin(np.pi/2),np.cos(np.pi/2)]])
-                v_ball = ball.velocity @ np.transpose(reference_rotate_matrix) - v_pad + v_rotate_tan
-                v_ball_copy = np.copy(v_ball)
+    if type(object) == objects.Pad or type(object) == objects.Brick:
+        angle = object.facing_angle - np.pi/2
+        reference_rotate_matrix = np.array([[np.cos(angle),np.sin(angle)],
+                                            [-np.sin(angle),np.cos(angle)]])
+        p = p @ np.transpose(reference_rotate_matrix)
+        #collision
+        if np.abs(p[0]) <= (object.lenth + ball.size)/2 and np.abs(p[1]) <= (object.thickness + ball.size)/2:
+            v_pad = object.velocity @ np.transpose(reference_rotate_matrix)
+            v_rotate_tan = p * object.angular_velocity @ np.array([[np.cos(np.pi/2),-np.sin(np.pi/2)],
+                                                                    [np.sin(np.pi/2),np.cos(np.pi/2)]])
+            v_ball = ball.velocity @ np.transpose(reference_rotate_matrix) - v_pad + v_rotate_tan
+            v_ball_copy = np.copy(v_ball)
 
-                #upper & lower surface
-                if abs(p[0] - v_ball_copy[0]) <= (object.lenth)/2:  
-                    #normal (orthogonal) collision
-                    v_ball[1] = -v_ball[1]
+            #upper & lower surface
+            if abs(p[0] - v_ball_copy[0]) <= (object.lenth)/2:  
+                #normal (orthogonal) collision
+                v_ball[1] = -v_ball[1]
 
-                    #friction
-                    J_crit = -2/7 * (v_ball[0] - ball.angular_velocity * ball.size/2)
-                    J_n = 2*v_ball[1]
-                    J_tan = J_crit/abs(J_crit) * min(abs(J_crit), abs(J_n * object.friction_coefficient))
-                    v_ball[0] += J_tan
-                    ball.angular_velocity += -J_tan / ((2/5)*(ball.size/2))
+                #friction
+                J_crit = -2/7 * (v_ball[0] - ball.angular_velocity * ball.size/2)
+                J_n = 2*v_ball[1]
+                J_tan = J_crit/abs(J_crit) * min(abs(J_crit), abs(J_n * object.friction_coefficient)) if J_crit != 0 else 0
+                v_ball[0] += J_tan
+                ball.angular_velocity += -J_tan / ((2/5)*(ball.size/2))
 
-                #left & right surface
-                if abs(p[1] - v_ball_copy[1]) <= object.thickness/2:
-                    #normal (orthogonal) collision
-                    v_ball[0] = -v_ball[0]
+            #left & right surface
+            if abs(p[1] - v_ball_copy[1]) <= object.thickness/2:
+                #normal (orthogonal) collision
+                v_ball[0] = -v_ball[0]
 
-                    #friction
-                    J_crit = -2/7 * (v_ball[1] - ball.angular_velocity * ball.size/2)
-                    J_n = 2*v_ball[0]
-                    J_tan = J_crit/abs(J_crit) * min(abs(J_crit), abs(J_n * object.friction_coefficient))
-                    v_ball[1] += J_tan
-                    ball.angular_velocity += -J_tan / ((2/5)*(ball.size/2))
+                #friction
+                J_crit = -2/7 * (v_ball[1] - ball.angular_velocity * ball.size/2)
+                J_n = 2*v_ball[0]
+                J_tan = J_crit/abs(J_crit) * min(abs(J_crit), abs(J_n * object.friction_coefficient))
+                v_ball[1] += J_tan
+                ball.angular_velocity += -J_tan / ((2/5)*(ball.size/2))
 
-                #corner collision, later
-                else:
-                    pass
+            #corner collision, later
+            else:
+                pass
+            ball.velocity = (v_ball + v_pad) @ reference_rotate_matrix
 
-                ball.velocity = (v_ball + v_pad) @ reference_rotate_matrix
+            if type(object) == objects.Brick:
+                object.collided = 1
+
+def ball_collision_wall(ball):
+    if ((ball.pos[0] < abs(ball.velocity[0]) and ball.velocity[0] < 0) 
+        or (ball.pos[0] + ball.size > 800 - abs(ball.velocity[0]) and ball.velocity[0] > 0 )):
+        ball.velocity[0] = -1* ball.velocity[0]
+        return 0
+
+    elif (ball.pos[1] < abs(ball.velocity[1]) and ball.velocity[1] < 0):
+        ball.velocity[1] = -1* ball.velocity[1]
+        return 0
+
+    elif (ball.pos[1] + ball.size > 600 - abs(ball.velocity[1]) and ball.velocity[1] > 0 ):
+        ball.velocity[1] = -1* ball.velocity[1]
+        return 1
+    else:
+        return 0
             
 
 def move_pad(pad):
@@ -83,14 +100,7 @@ def move_pad(pad):
 
 def move_ball(ball):
     #hitting the wall (depending on width of screen or specific design)
-    if ((ball.pos[0] < abs(ball.velocity[0]) and ball.velocity[0] < 0) 
-        or (ball.pos[0] + ball.size > 800 - abs(ball.velocity[0]) and ball.velocity[0] > 0 )):
-
-        ball.velocity[0] = -1* ball.velocity[0]
-    elif ((ball.pos[1] < abs(ball.velocity[1]) and ball.velocity[1] < 0) 
-        or (ball.pos[1] + ball.size > 600 - abs(ball.velocity[1]) and ball.velocity[1] > 0 )):
-        ball.velocity[1] = -1* ball.velocity[1]
-
+    game_over = ball_collision_wall(ball)
     #magnus effect
     angle = ball.magnus_effect_intensity * ball.angular_velocity
     R = np.array([[np.cos(angle), np.sin(angle)],
@@ -107,13 +117,15 @@ def move_ball(ball):
         print('too fast')
 
     ball.pos += ball.velocity
+    return game_over
 
 def move(list_of_object: list = []):
+    game_over = 0
     for i in list_of_object:
         if type(i) == objects.Pad:
             move_pad(i)
         elif type(i) == objects.Ball:
-            move_ball(i)
+            game_over += move_ball(i)
         else:
             pass
-
+    return game_over
