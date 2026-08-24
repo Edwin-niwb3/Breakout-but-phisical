@@ -1,5 +1,4 @@
-# Pygame
-## Breakout but physical
+# Breakout but physical
 
 It is a simple game just like Breakout, but with more phisical collision, friction and even Magnus effect.
 *The collision on the corner is not yet complete
