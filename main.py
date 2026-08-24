@@ -18,6 +18,8 @@ list_of_objects = [pad, ball, brick]
 brick_quantity = 1
 brick_quantity_max = 5
 
+scoreboard = objects.Scoreboard([0,0], lenth = 150, thickness = 60)
+
 game_over = 0
 
 #main loop
@@ -28,8 +30,20 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
+    key_pressed = pygame.key.get_pressed()
+    #Reset
+    if key_pressed[pygame.K_ESCAPE]:
+        game_over = 0
+        pad = objects.Pad([400,500], lenth = 80, thickness = 10, friction_coefficient = 0.2)
+        ball = objects.Ball([400,100], size = 10, velocity = np.array([0.0,2.0]),
+                    magnus_effect_intensity = 0.01)
+        brick = objects.Brick((200,100))
+        list_of_objects = [pad, ball, brick]
+        brick_quantity = 1
+        brick_quantity_max = 5
+        scoreboard = objects.Scoreboard([0,0], lenth = 150, thickness = 60)
+
     #test transformation
-    # key_pressed = pygame.key.get_pressed()
     # if key_pressed[pygame.K_t]:
     #     pad.change_size(pad.thickness - 1)
     # elif key_pressed[pygame.K_z]:
@@ -52,12 +66,14 @@ while running:
         if type(i) == objects.Brick:
             if i.collided == 1:
                 list_of_objects.remove(i)
+                scoreboard.score += 1
                 brick_quantity += -1
 
 
     #illustration
     canvas = np.zeros((600,800,3))
     illustrations.illustrate(screen, canvas, list_of_objects)
+    scoreboard.scoreboard_render(screen)
 
     #for test, show the area of pad
     # p_1 = pad.pos.astype(int)
@@ -75,13 +91,12 @@ while running:
     pygame.draw.circle(screen, 'blue' if ball.angular_velocity > 0 else 'red', (ball.pos + np.array([ball.size/2, ball.size/2])).astype(int),
                         int(abs(ball.angular_velocity)*50),1)
 
-    print(game_over, end = '\r')
     if game_over:
         screen.fill('black')
         font = pygame.font.Font(None, 48)
         font1 = pygame.font.Font(None, 25)
         text_surface = font.render('Game Over', 0, 'white')
-        text_surface1 = font1.render('Please close this file, we don\'t have reset',0,'white')
+        text_surface1 = font1.render('Press \'ESC\' to reset the game',0,'white')
         screen.blit(text_surface, (300, 200))
         screen.blit(text_surface1, (300, 250))
         pass

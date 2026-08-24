@@ -114,3 +114,23 @@ class Brick(Object):
         pad_render(self)
         #Here we yet borrow pad_render(), later we might rename it to rectangle_render()
         pass
+
+class Scoreboard():
+    def __init__(self, pos, lenth, thickness, score = 0):
+        self.pos = np.array(pos)
+        self.lenth = lenth
+        self.thickness = thickness
+        self.score = score
+
+    def scoreboard_render(self, screen):
+        p_1 = self.pos
+        p_2 = self.pos + np.array([self.lenth, 0])
+        p_3 = self.pos + np.array([self.lenth, self.thickness])
+        p_4 = self.pos + np.array([0, self.thickness])
+        pygame.draw.lines(screen, 'white', 1, [p_1, p_2, p_3, p_4])
+        font = pygame.font.Font(None, 25)
+        text_surface = font.render(f'Score: {self.score}',0,'white')
+        target_rect = pygame.Rect(self.pos[0], self.pos[1], self.lenth, self.thickness)
+        text_rect = text_surface.get_rect()
+        text_rect.center = target_rect.center
+        screen.blit(text_surface, text_rect)
